@@ -1,25 +1,31 @@
 import React from 'react';
 import { Menu } from 'antd';
-import { SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { SettingOutlined, TeamOutlined, FileOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const UserSidebar: React.FC = () => {
+const StaffSidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const items = [
     {
-      key: '/my-profile',
-      icon: <UserOutlined />,
-      label: 'My Profile',
-      onClick: () => navigate('/my-profile'),
+      key: '/my-tasks',
+      icon: <FileOutlined />,
+      label: 'My Tasks',
+      onClick: () => navigate('/my-tasks'),
+    },
+    {
+      key: '/team',
+      icon: <TeamOutlined />,
+      label: 'Team',
+      onClick: () => navigate('/team'),
     },
     {
       key: '/setting',
       icon: <SettingOutlined />,
       label: 'Setting',
       onClick: () => navigate('/setting'),
-    }
+    },
   ];
 
   return (
@@ -32,4 +38,4 @@ const UserSidebar: React.FC = () => {
   );
 };
 
-export default UserSidebar;
+export default StaffSidebar;

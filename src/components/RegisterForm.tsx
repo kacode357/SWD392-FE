@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Select, DatePicker, Row, Col, notification } from 'antd'; 
+import { Form, Input,  Select, DatePicker, Row, Col, notification } from 'antd'; 
 import { createUserApi } from '../util/api';
 import FileUploader from '../util/FileUploader';
 
@@ -197,9 +197,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
           </Col>
         </Row>
 
-        <Button type="primary" htmlType="submit" block>
-          Sign Up
-        </Button>
+       <button>  Sign Up</button>
+        
+       
       </Form>
     </div>
   );

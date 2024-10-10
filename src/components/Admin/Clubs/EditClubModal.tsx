@@ -56,6 +56,7 @@ const EditClubModal: React.FC<EditClubModalProps> = ({ visible, clubId, onClose,
         ...values,
         establishedYear: values.establishedYear.toISOString(), // Convert moment object to ISO string
         clubLogo, // Attach the uploaded club logo URL
+        status : true 
       };
 
       setLoading(true);

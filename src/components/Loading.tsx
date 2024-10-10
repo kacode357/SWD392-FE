@@ -1,6 +1,6 @@
 import React from 'react';
 import Lottie from 'lottie-react';
-import animationData from '../assets/Animation - 1726033251609.json';
+import animationData from '../assets/48akEhxRhY.json';
 
 interface LoadingProps {
   isLoading: boolean;

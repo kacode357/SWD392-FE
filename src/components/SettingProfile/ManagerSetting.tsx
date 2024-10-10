@@ -1,33 +1,30 @@
 import { useState } from 'react';
-import { Tabs } from 'antd';           // Import Tabs from antd
-import Setting from './Setting';       // Import the Setting component
-import ChangePassword from './ChangePassword'; // Import the ChangePassword component
+import { Tabs } from 'antd';
+import Setting from './Setting';
+import ChangePassword from './ChangePassword';
 
-const { TabPane } = Tabs;              // Destructure TabPane from Tabs
+const { TabPane } = Tabs;
 
 const ManagerSetting = () => {
-  // State to track the active tab
   const [activeTab, setActiveTab] = useState('setting');
 
   return (
     <div className="manager-setting">
-      {/* Use Tabs from antd */}
-      <Tabs 
-        activeKey={activeTab} 
-        onChange={(key) => setActiveTab(key)} 
-        centered
-        type="card"
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        className="custom-tabs"
+        tabBarStyle={{ borderBottom: '1px solid #e8e8e8', textAlign: 'left' }}
       >
-        {/* Tab navigation */}
         <TabPane tab="Setting" key="setting">
-          <Setting />  {/* Render Setting component */}
+          <Setting />
         </TabPane>
         <TabPane tab="Change Password" key="changePassword">
-          <ChangePassword /> {/* Render ChangePassword component */}
+          <ChangePassword />
         </TabPane>
       </Tabs>
     </div>
   );
-}
+};
 
 export default ManagerSetting;

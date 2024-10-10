@@ -1,27 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Table, Avatar, Input, Button, Space, Row, Col, Tabs } from "antd";
-import { searchClubApi } from "../../../util/api";
+import { Table, Input, Button, Space, Row, Col, Tabs } from "antd";
+import { searchTypeShirtApi } from "../../../util/api"; // Giả sử có API tương ứng cho áo
 import ToggleStatusButton from "./ToggleStatusButton";
-import EditClubModal from "./EditClubModal";
-import AddClubModal from "./AddClubModal";
-import moment from "moment";
+import EditShirtModal from "./EditShirtModal";
+import AddShirtModal from "./AddShirtModal";
 import { EditOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-interface Club {
+interface Shirt {
   id: number;
   name: string;
-  country: string;
-  establishedYear: number;
-  stadiumName: string;
-  clubLogo: string;
+  description: string;
+  sessionId: number;
+  clubId: number;
   status: boolean;
 }
 
-const ClubComponent: React.FC = () => {
-  const [clubs, setClubs] = useState<Club[]>([]);
+const Typeshirt: React.FC = () => {
+  const [shirts, setShirts] = useState<Shirt[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -29,13 +27,13 @@ const ClubComponent: React.FC = () => {
     total: 0,
   });
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [activeTab, setActiveTab] = useState("activeClubs");
-  const [isAddClubModalVisible, setIsAddClubModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("activeShirts");
+  const [isAddShirtModalVisible, setIsAddShirtModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingClubId, setEditingClubId] = useState<number | null>(null);
+  const [editingShirtId, setEditingShirtId] = useState<number | null>(null);
 
-  // Fetch clubs from API
-  const fetchClubs = async (page = 1, pageSize = 10, keyword = "", isDeleted = false) => {
+  // Fetch shirts from API
+  const fetchShirts = async (page = 1, pageSize = 10, keyword = "", isDeleted = false) => {
     setLoading(true);
     const data = {
       pageNum: page,
@@ -43,8 +41,9 @@ const ClubComponent: React.FC = () => {
       keyWord: keyword,
       status: !isDeleted,
     };
-    const response = await searchClubApi(data);
-    setClubs(response.pageData);
+    const response = await searchTypeShirtApi(data);
+    console.log(response);
+    setShirts(response.pageData);
     setPagination({
       current: response.pageInfo.page,
       pageSize: response.pageInfo.size,
@@ -54,100 +53,85 @@ const ClubComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchClubs(pagination.current, pagination.pageSize);
+    fetchShirts(pagination.current, pagination.pageSize);
   }, []);
 
-  // Handle table pagination changes
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
     setPagination((prev) => ({ ...prev, current, pageSize }));
-    fetchClubs(current, pageSize, searchKeyword, activeTab === "deletedClubs");
+    fetchShirts(current, pageSize, searchKeyword, activeTab === "deletedShirts");
   };
 
-  // Handle search functionality
   const onSearch = (value: string) => {
     setSearchKeyword(value);
-    fetchClubs(1, pagination.pageSize, value, activeTab === "deletedClubs");
+    fetchShirts(1, pagination.pageSize, value, activeTab === "deletedShirts");
   };
 
-  // Handle reset functionality
   const handleReset = () => {
     setSearchKeyword("");
-    fetchClubs(1, pagination.pageSize, "", activeTab === "deletedClubs");
+    fetchShirts(1, pagination.pageSize, "", activeTab === "deletedShirts");
   };
 
-  // Handle Add Club button click
-  const handleAddClub = () => {
-    setIsAddClubModalVisible(true);
+  const handleAddShirt = () => {
+    setIsAddShirtModalVisible(true);
   };
 
-  // Close the modal
   const handleCloseModal = () => {
-    setIsAddClubModalVisible(false);
+    setIsAddShirtModalVisible(false);
     setIsEditModalVisible(false);
-    setEditingClubId(null);
+    setEditingShirtId(null);
   };
 
-  // Open EditClubModal
-  const handleEditClub = (clubId: number) => {
-    setEditingClubId(clubId);
+  const handleEditShirt = (shirtId: number) => {
+    setEditingShirtId(shirtId);
     setIsEditModalVisible(true);
   };
 
-  // Handle tab change
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    fetchClubs(1, pagination.pageSize, searchKeyword, key === "deletedClubs");
+    fetchShirts(1, pagination.pageSize, searchKeyword, key === "deletedShirts");
   };
 
   // Table columns
   const columns = [
     {
-      title: "Club Name",
+      title: "Shirt Name",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Country",
-      dataIndex: "country",
-      key: "country",
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
     },
     {
-      title: "Established Year",
-      dataIndex: "establishedYear",
-      render: (establishedYear: number) => moment(establishedYear).format('YYYY'),
+      title: "Session Name",
+      dataIndex: "sessionName",
+      key: "sessionId",
     },
     {
-      title: "Stadium Name",
-      dataIndex: "stadiumName",
-      key: "stadiumName",
-    },
-    {
-      title: "Club Logo",
-      dataIndex: "clubLogo",
-      key: "clubLogo",
-      render: (clubLogo: string) => <Avatar src={clubLogo} />,
+      title: "Club Name",
+      dataIndex: "clubName",
+      key: "clubId",
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: boolean, record: Club) => (
+      render: (status: boolean, record: Shirt) => (
         <ToggleStatusButton
-          isDelete={!status} // Pass whether the club is deactivated (true) or active (false)
-          clubId={record.id}  // Pass the club's ID
-          refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")} // Refresh clubs after toggling status
+          isDelete={!status}
+          shirtId={record.id}
+          refreshShirts={() => fetchShirts(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedShirts")}
         />
       ),
-    }
-    ,
+    },
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: Club) => (
-
+      render: (_: any, record: Shirt) => (
         <EditOutlined
-          onClick={() => handleEditClub(record.id)}
+          onClick={() => handleEditShirt(record.id)}
           style={{ color: 'black', cursor: 'pointer' }}
         />
       ),
@@ -156,10 +140,9 @@ const ClubComponent: React.FC = () => {
 
   return (
     <div>
-      {/* Tabs at the top */}
-      <Tabs className="custom-tabs" defaultActiveKey="activeUsers" onChange={handleTabChange}>
-        <TabPane tab="Active Clubs" key="activeClubs">
-          <Row justify="space-between" style={{ marginBottom: 16 }}>
+       <Tabs className="custom-tabs" defaultActiveKey="activeUsers" onChange={handleTabChange}>
+        <TabPane tab="Active Shirts" key="activeShirts">
+        <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
             <Space className="custom-search">
                 <Search
@@ -174,12 +157,12 @@ const ClubComponent: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <button className="custom-button" onClick={handleAddClub}>Add Club</button>
+              <button className="custom-button" onClick={handleAddShirt}>Add Type Shirt</button>
             </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={clubs}
+            dataSource={shirts}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -192,14 +175,13 @@ const ClubComponent: React.FC = () => {
             onChange={handleTableChange}
           />
         </TabPane>
-        <TabPane tab="Deleted Clubs" key="deletedClubs">
+        <TabPane tab="Deleted Shirts" key="deletedShirts">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
               <Space>
                 <Search
                   placeholder="Search by keyword"
                   onSearch={onSearch}
-                  enterButton
                   allowClear
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
@@ -207,13 +189,10 @@ const ClubComponent: React.FC = () => {
                 <Button onClick={handleReset}>Reset</Button>
               </Space>
             </Col>
-            <Col>
-              <Button type="primary" onClick={handleAddClub}>Add Club</Button>
-            </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={clubs}
+            dataSource={shirts}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -228,24 +207,22 @@ const ClubComponent: React.FC = () => {
         </TabPane>
       </Tabs>
 
-      {/* AddClubModal Component */}
-      <AddClubModal
-        visible={isAddClubModalVisible}
+      <AddShirtModal
+        visible={isAddShirtModalVisible}
         onClose={handleCloseModal}
-        refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")}
+        refreshShirts={() => fetchShirts(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedShirts")}
       />
 
-      {/* EditClubModal Component */}
-      {editingClubId && (
-        <EditClubModal
-          clubId={editingClubId}
+      {editingShirtId && (
+        <EditShirtModal
+          shirtId={editingShirtId}
           visible={isEditModalVisible}
           onClose={handleCloseModal}
-          refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")}
+          refreshShirts={() => fetchShirts(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedShirts")}
         />
       )}
     </div>
   );
 };
 
-export default ClubComponent;
+export default Typeshirt;

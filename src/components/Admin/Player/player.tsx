@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { Table, Avatar, Input, Button, Space, Row, Col, Tabs } from "antd";
-import { getAllUserApi } from "../../../util/api";
-import ToggleStatusButton from "./ToggleStatusButton";
-import EditUserModal from "./EditUserModal";
-import AddUserModal from "./AddUserButton";
+import { Table, Input, Button, Space, Row, Col, Tabs } from "antd";
+import { searchPlayerApi } from "../../../util/api"; // Import the API for players
+import ToggleStatusButton from "./ToggleStatusButton.tsx";
+import EditPlayerModal from "./EditPlayerModal.tsx";
+import AddPlayerModal from "./AddPlayerModal.tsx";
+import moment from "moment";
 import { EditOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-interface User {
+interface Player {
   id: number;
-  email: string;
-  userName: string;
+  name: string;
+  position: string;
+  nationality: string;
+  birthDate: string;
+  clubName: string;
+  playerPhoto: string;
   status: boolean;
-  imgUrl: string;
 }
 
-const UserComponent: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const PlayerComponent: React.FC = () => {
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -26,13 +30,13 @@ const UserComponent: React.FC = () => {
     total: 0,
   });
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [activeTab, setActiveTab] = useState("activeUsers"); // State to manage active tab
-  const [isAddUserModalVisible, setIsAddUserModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("activePlayers");
+  const [isAddPlayerModalVisible, setIsAddPlayerModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
 
-  // Fetch users from API
-  const fetchUsers = async (
+  // Fetch players from API
+  const fetchPlayers = async (
     page = 1,
     pageSize = 10,
     keyword = "",
@@ -43,14 +47,11 @@ const UserComponent: React.FC = () => {
       pageNum: page,
       pageSize: pageSize,
       keyWord: keyword,
-      role: "all",
-      status: true,
-      is_Verify: true,
-      is_Delete: isDeleted,
+      status: !isDeleted,
     };
-    const response = await getAllUserApi(data);
-
-    setUsers(response.pageData);
+    const response = await searchPlayerApi(data);
+    console.log("check res : ",response);
+    setPlayers(response.pageData);
     setPagination({
       current: response.pageInfo.page,
       pageSize: response.pageInfo.size,
@@ -60,96 +61,115 @@ const UserComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers(pagination.current, pagination.pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchPlayers(pagination.current, pagination.pageSize);
   }, []);
 
   // Handle table pagination changes
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
     setPagination((prev) => ({ ...prev, current, pageSize }));
-    fetchUsers(current, pageSize, searchKeyword, activeTab === "deletedUsers");
+    fetchPlayers(
+      current,
+      pageSize,
+      searchKeyword,
+      activeTab === "deletedPlayers"
+    );
   };
 
   // Handle search functionality
   const onSearch = (value: string) => {
     setSearchKeyword(value);
-    fetchUsers(1, pagination.pageSize, value, activeTab === "deletedUsers");
+    fetchPlayers(1, pagination.pageSize, value, activeTab === "deletedPlayers");
   };
 
   // Handle reset functionality
   const handleReset = () => {
     setSearchKeyword("");
-    fetchUsers(1, pagination.pageSize, "", activeTab === "deletedUsers");
+    fetchPlayers(1, pagination.pageSize, "", activeTab === "deletedPlayers");
   };
 
-  // Handle Add User button click
-  const handleAddUser = () => {
-    setIsAddUserModalVisible(true);
+  // Handle Add Player button click
+  const handleAddPlayer = () => {
+    setIsAddPlayerModalVisible(true);
   };
 
   // Close the modal
   const handleCloseModal = () => {
-    setIsAddUserModalVisible(false);
+    setIsAddPlayerModalVisible(false);
     setIsEditModalVisible(false);
-    setEditingUserId(null);
+    setEditingPlayerId(null);
   };
 
-  // Open EditUserModal
-  const handleEditUser = (userId: number) => {
-    setEditingUserId(userId);
+  // Open EditPlayerModal
+  const handleEditPlayer = (playerId: number) => {
+    setEditingPlayerId(playerId);
     setIsEditModalVisible(true);
   };
 
   // Handle tab change
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    fetchUsers(1, pagination.pageSize, searchKeyword, key === "deletedUsers");
+    fetchPlayers(
+      1,
+      pagination.pageSize,
+      searchKeyword,
+      key === "deletedPlayers"
+    );
   };
 
   // Table columns
   const columns = [
     {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "name",
     },
     {
-      title: "User Name",
-      dataIndex: "userName",
-      key: "userName",
+      title: "Height",
+      dataIndex: "height",
+      key: "height",
+    },
+    {
+      title: "Weight",
+      dataIndex: "weight",
+      key: "weight",
+    },
+    {
+      title: "Birth Date",
+      dataIndex: "birthDate",
+      render: (birthDate: string) => moment(birthDate).format("YYYY-MM-DD"),
+    },
+    {
+      title: "Nationality",
+      dataIndex: "nationality",
+      key: "nationality",
     },
     {
       title: "Status",
-      dataIndex: "isDelete",
-      key: "isDelete",
-      render: (isDelete: boolean, record: User) => (
+      dataIndex: "status",
+      key: "status",
+      render: (status: boolean, record: Player) => (
         <ToggleStatusButton
-          isDelete={isDelete}
-          userId={record.id}
-          refreshUsers={() =>
-            fetchUsers(
+          isDelete={!status} // Trạng thái ban đầu: true nếu đang vô hiệu hóa
+          clubId={record.id} // Giả sử bạn đang áp dụng cho đối tượng Player
+          refreshClubs={() =>
+            fetchPlayers(
               pagination.current,
               pagination.pageSize,
               searchKeyword,
-              activeTab === "deletedUsers"
+              activeTab === "deletedPlayers"
             )
           }
         />
       ),
     },
-    {
-      title: "Avatar",
-      dataIndex: "imgUrl",
-      key: "imgUrl",
-      render: (imgUrl: string) => <Avatar src={imgUrl} />,
-    },
+    
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: User) => (
+      render: (_: any, record: Player) => (
         <EditOutlined
-          onClick={() => handleEditUser(record.id)}
+          onClick={() => handleEditPlayer(record.id)}
           style={{ color: "black", cursor: "pointer" }}
         />
       ),
@@ -158,14 +178,12 @@ const UserComponent: React.FC = () => {
 
   return (
     <div>
-      {/* Tabs at the top */}
       <Tabs
         className="custom-tabs"
         defaultActiveKey="activeUsers"
         onChange={handleTabChange}
       >
-        <TabPane tab="Active Users" key="activeUsers">
-          {/* Content for active users */}
+        <TabPane tab="Active Players" key="activePlayers">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
               <Space className="custom-search">
@@ -184,14 +202,14 @@ const UserComponent: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <button className="custom-button" onClick={handleAddUser}>
-                Add User
+              <button className="custom-button" onClick={handleAddPlayer}>
+                Add Player
               </button>
             </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={users}
+            dataSource={players}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -204,8 +222,7 @@ const UserComponent: React.FC = () => {
             onChange={handleTableChange}
           />
         </TabPane>
-        <TabPane tab="Deleted Users" key="deletedUsers">
-          {/* Content for deleted users */}
+        <TabPane tab="Deleted Players" key="deletedPlayers">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
               <Space>
@@ -221,14 +238,14 @@ const UserComponent: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <Button type="primary" onClick={handleAddUser}>
-                Add User
+              <Button type="primary" onClick={handleAddPlayer}>
+                Add Player
               </Button>
             </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={users}
+            dataSource={players}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -243,32 +260,32 @@ const UserComponent: React.FC = () => {
         </TabPane>
       </Tabs>
 
-      {/* AddUserModal Component */}
-      <AddUserModal
-        visible={isAddUserModalVisible}
+      {/* AddPlayerModal Component */}
+      <AddPlayerModal
+        visible={isAddPlayerModalVisible}
         onClose={handleCloseModal}
-        refreshUsers={() =>
-          fetchUsers(
+        refreshPlayers={() =>
+          fetchPlayers(
             pagination.current,
             pagination.pageSize,
             searchKeyword,
-            activeTab === "deletedUsers"
+            activeTab === "deletedPlayers"
           )
         }
       />
 
-      {/* EditUserModal Component */}
-      {editingUserId && (
-        <EditUserModal
-          userId={editingUserId}
+      {/* EditPlayerModal Component */}
+      {editingPlayerId && (
+        <EditPlayerModal
+          playerId={editingPlayerId}
           visible={isEditModalVisible}
           onClose={handleCloseModal}
-          refreshUsers={() =>
-            fetchUsers(
+          refreshPlayers={() =>
+            fetchPlayers(
               pagination.current,
               pagination.pageSize,
               searchKeyword,
-              activeTab === "deletedUsers"
+              activeTab === "deletedPlayers"
             )
           }
         />
@@ -277,4 +294,4 @@ const UserComponent: React.FC = () => {
   );
 };
 
-export default UserComponent;
+export default PlayerComponent;

@@ -1,27 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Table, Avatar, Input, Button, Space, Row, Col, Tabs } from "antd";
-import { searchClubApi } from "../../../util/api";
+import { Table, Input, Button, Space, Row, Col, Tabs } from "antd";
+import { searchSessionApi } from "../../../util/api";
 import ToggleStatusButton from "./ToggleStatusButton";
-import EditClubModal from "./EditClubModal";
-import AddClubModal from "./AddClubModal";
+import EditSessionModal from "./EditSessionModal";
+import AddSessionModal from "./AddSessionModal";
 import moment from "moment";
 import { EditOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-interface Club {
+interface Session {
   id: number;
   name: string;
-  country: string;
-  establishedYear: number;
-  stadiumName: string;
-  clubLogo: string;
+  startDdate: string;
+  endDdate: string;
+  description: string;
   status: boolean;
 }
 
-const ClubComponent: React.FC = () => {
-  const [clubs, setClubs] = useState<Club[]>([]);
+const SessionComponent: React.FC = () => {
+  const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -29,13 +28,13 @@ const ClubComponent: React.FC = () => {
     total: 0,
   });
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [activeTab, setActiveTab] = useState("activeClubs");
-  const [isAddClubModalVisible, setIsAddClubModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("activeSessions");
+  const [isAddSessionModalVisible, setIsAddSessionModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editingClubId, setEditingClubId] = useState<number | null>(null);
+  const [editingSessionId, setEditingSessionId] = useState<number | null>(null);
 
-  // Fetch clubs from API
-  const fetchClubs = async (page = 1, pageSize = 10, keyword = "", isDeleted = false) => {
+  // Fetch sessions from API
+  const fetchSessions = async (page = 1, pageSize = 10, keyword = "", isDeleted = false) => {
     setLoading(true);
     const data = {
       pageNum: page,
@@ -43,8 +42,8 @@ const ClubComponent: React.FC = () => {
       keyWord: keyword,
       status: !isDeleted,
     };
-    const response = await searchClubApi(data);
-    setClubs(response.pageData);
+    const response = await searchSessionApi(data);
+    setSessions(response.pageData);
     setPagination({
       current: response.pageInfo.page,
       pageSize: response.pageInfo.size,
@@ -54,100 +53,92 @@ const ClubComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchClubs(pagination.current, pagination.pageSize);
+    fetchSessions(pagination.current, pagination.pageSize);
   }, []);
 
   // Handle table pagination changes
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
     setPagination((prev) => ({ ...prev, current, pageSize }));
-    fetchClubs(current, pageSize, searchKeyword, activeTab === "deletedClubs");
+    fetchSessions(current, pageSize, searchKeyword, activeTab === "deletedSessions");
   };
 
   // Handle search functionality
   const onSearch = (value: string) => {
     setSearchKeyword(value);
-    fetchClubs(1, pagination.pageSize, value, activeTab === "deletedClubs");
+    fetchSessions(1, pagination.pageSize, value, activeTab === "deletedSessions");
   };
 
   // Handle reset functionality
   const handleReset = () => {
     setSearchKeyword("");
-    fetchClubs(1, pagination.pageSize, "", activeTab === "deletedClubs");
+    fetchSessions(1, pagination.pageSize, "", activeTab === "deletedSessions");
   };
 
-  // Handle Add Club button click
-  const handleAddClub = () => {
-    setIsAddClubModalVisible(true);
+  // Handle Add Session button click
+  const handleAddSession = () => {
+    setIsAddSessionModalVisible(true);
   };
 
   // Close the modal
   const handleCloseModal = () => {
-    setIsAddClubModalVisible(false);
+    setIsAddSessionModalVisible(false);
     setIsEditModalVisible(false);
-    setEditingClubId(null);
+    setEditingSessionId(null);
   };
 
-  // Open EditClubModal
-  const handleEditClub = (clubId: number) => {
-    setEditingClubId(clubId);
+  // Open EditSessionModal
+  const handleEditSession = (sessionId: number) => {
+    setEditingSessionId(sessionId);
     setIsEditModalVisible(true);
   };
 
   // Handle tab change
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    fetchClubs(1, pagination.pageSize, searchKeyword, key === "deletedClubs");
+    fetchSessions(1, pagination.pageSize, searchKeyword, key === "deletedSessions");
   };
 
   // Table columns
   const columns = [
     {
-      title: "Club Name",
+      title: "Session Name",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Country",
-      dataIndex: "country",
-      key: "country",
+      title: "Start Date",
+      dataIndex: "startDdate",
+      render: (startDdate: string) => moment(startDdate).format('YYYY-MM-DD'),
     },
     {
-      title: "Established Year",
-      dataIndex: "establishedYear",
-      render: (establishedYear: number) => moment(establishedYear).format('YYYY'),
+      title: "End Date",
+      dataIndex: "endDdate",
+      render: (endDdate: string) => moment(endDdate).format('YYYY-MM-DD'),
     },
     {
-      title: "Stadium Name",
-      dataIndex: "stadiumName",
-      key: "stadiumName",
-    },
-    {
-      title: "Club Logo",
-      dataIndex: "clubLogo",
-      key: "clubLogo",
-      render: (clubLogo: string) => <Avatar src={clubLogo} />,
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: boolean, record: Club) => (
+      render: (status: boolean, record: Session) => (
         <ToggleStatusButton
-          isDelete={!status} // Pass whether the club is deactivated (true) or active (false)
-          clubId={record.id}  // Pass the club's ID
-          refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")} // Refresh clubs after toggling status
+          isDelete={!status} 
+          sessionId={record.id}
+          refreshSessions={() => fetchSessions(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedSessions")}
         />
       ),
-    }
-    ,
+    },
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: Club) => (
-
+      render: (_: any, record: Session) => (
         <EditOutlined
-          onClick={() => handleEditClub(record.id)}
+          onClick={() => handleEditSession(record.id)}
           style={{ color: 'black', cursor: 'pointer' }}
         />
       ),
@@ -156,9 +147,8 @@ const ClubComponent: React.FC = () => {
 
   return (
     <div>
-      {/* Tabs at the top */}
       <Tabs className="custom-tabs" defaultActiveKey="activeUsers" onChange={handleTabChange}>
-        <TabPane tab="Active Clubs" key="activeClubs">
+        <TabPane tab="Active Sessions" key="activeSessions">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
             <Space className="custom-search">
@@ -174,12 +164,12 @@ const ClubComponent: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <button className="custom-button" onClick={handleAddClub}>Add Club</button>
+              <button className="custom-button" onClick={handleAddSession}>Add Season</button>
             </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={clubs}
+            dataSource={sessions}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -192,7 +182,7 @@ const ClubComponent: React.FC = () => {
             onChange={handleTableChange}
           />
         </TabPane>
-        <TabPane tab="Deleted Clubs" key="deletedClubs">
+        <TabPane tab="Deleted Sessions" key="deletedSessions">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
               <Space>
@@ -208,12 +198,13 @@ const ClubComponent: React.FC = () => {
               </Space>
             </Col>
             <Col>
-              <Button type="primary" onClick={handleAddClub}>Add Club</Button>
+          
+              <button className="custom-button" onClick={handleAddSession}>Add Season</button>
             </Col>
           </Row>
           <Table
             columns={columns}
-            dataSource={clubs}
+            dataSource={sessions}
             rowKey="id"
             pagination={{
               current: pagination.current,
@@ -228,24 +219,24 @@ const ClubComponent: React.FC = () => {
         </TabPane>
       </Tabs>
 
-      {/* AddClubModal Component */}
-      <AddClubModal
-        visible={isAddClubModalVisible}
+      {/* AddSessionModal Component */}
+      <AddSessionModal
+        visible={isAddSessionModalVisible}
         onClose={handleCloseModal}
-        refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")}
+        refreshSessions={() => fetchSessions(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedSessions")}
       />
 
-      {/* EditClubModal Component */}
-      {editingClubId && (
-        <EditClubModal
-          clubId={editingClubId}
+      {/* EditSessionModal Component */}
+      {editingSessionId && (
+        <EditSessionModal
+          sessionId={editingSessionId}
           visible={isEditModalVisible}
           onClose={handleCloseModal}
-          refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")}
+          refreshSessions={() => fetchSessions(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedSessions")}
         />
       )}
     </div>
   );
 };
 
-export default ClubComponent;
+export default SessionComponent;
