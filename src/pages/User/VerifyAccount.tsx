@@ -1,49 +1,74 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, message } from "antd";
-import { verifyUserByIdApi } from "../../util/api"; // Adjust the path to your API file
-import { useParams, useNavigate } from "react-router-dom"; // For extracting id and navigation
+import { notification, Typography, Spin } from "antd";
+import { verifyUserByIdApi } from "../../util/api";
+import { useParams, useNavigate } from "react-router-dom";
+
+const { Title, Paragraph } = Typography;
 
 const VerifyAccount: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Use useParams to get the id from the URL
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Initialize the navigation hook
+  const [countdown, setCountdown] = useState(10);
+  const navigate = useNavigate();
 
-  // Automatically trigger verification when the component mounts
   useEffect(() => {
     if (id) {
-      handleVerify(parseInt(id, 10)); // Ensure id is converted to a number
+      handleVerify(parseInt(id, 10));
     }
   }, [id]);
 
-  // Handle verification
+  useEffect(() => {
+    if (countdown > 0 && !loading) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (countdown === 0) {
+      navigate("/login");
+    }
+  }, [countdown, loading, navigate]);
+
   const handleVerify = async (userId: number) => {
     setLoading(true);
-    const result = await verifyUserByIdApi(userId);
-    console.log(result); // Log the result to the console for debugging
-    message.success(`User with ID ${userId} has been verified successfully!`);
-
-    // Redirect to login page after 10 seconds
-    setTimeout(() => {
-      navigate("/login"); // Adjust the path based on your routes
-    }, 10000); // 10 seconds delay
+    try {
+      const result = await verifyUserByIdApi(userId);
+      console.log(result);
+      notification.success({
+        message: "Verification Successful!",
+        description: "Your account has been verified.",
+      });
+    } catch (error) {
+      notification.error({
+        message: "Verification Failed!",
+        description: "An error occurred while verifying the account.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
-      <h1>Verify Account</h1>
+    <div style={{ maxWidth: "500px", margin: "50px auto", textAlign: "center" }}>
+      <Title level={2}>Verify Account</Title>
       {id ? (
-        <p>Verifying user with ID: {id}...</p>
+        <>
+          {loading ? (
+            <Spin tip="Verifying..." />
+          ) : (
+            <>
+              <Paragraph>
+                Successfully verified!
+              </Paragraph>
+              <Paragraph>
+                You will be redirected to the login page in:{" "}
+                <strong>{countdown} seconds</strong>.
+              </Paragraph>
+            </>
+          )}
+        </>
       ) : (
-        <p>No ID provided in the URL.</p>
+        <Paragraph>No ID provided in the URL.</Paragraph>
       )}
-      <Form>
-        {/* Optionally, you can add manual verification with a button here if needed */}
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            Verify Account
-          </Button>
-        </Form.Item>
-      </Form>
     </div>
   );
 };

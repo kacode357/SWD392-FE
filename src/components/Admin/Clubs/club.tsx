@@ -5,6 +5,7 @@ import ToggleStatusButton from "./ToggleStatusButton";
 import EditClubModal from "./EditClubModal";
 import AddClubModal from "./AddClubModal";
 import moment from "moment";
+import { EditOutlined, ReloadOutlined } from "@ant-design/icons";
 
 const { Search } = Input;
 const { TabPane } = Tabs;
@@ -24,7 +25,7 @@ const ClubComponent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize: 6,
+    pageSize: 5,
     total: 0,
   });
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -128,25 +129,27 @@ const ClubComponent: React.FC = () => {
       render: (clubLogo: string) => <Avatar src={clubLogo} />,
     },
     {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        render: (status: boolean, record: Club) => (
-          <ToggleStatusButton
-            isDelete={!status} // Pass whether the club is deactivated (true) or active (false)
-            clubId={record.id}  // Pass the club's ID
-            refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")} // Refresh clubs after toggling status
-          />
-        ),
-      }
-      ,
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: boolean, record: Club) => (
+        <ToggleStatusButton
+          isDelete={!status} // Pass whether the club is deactivated (true) or active (false)
+          clubId={record.id}  // Pass the club's ID
+          refreshClubs={() => fetchClubs(pagination.current, pagination.pageSize, searchKeyword, activeTab === "deletedClubs")} // Refresh clubs after toggling status
+        />
+      ),
+    }
+    ,
     {
       title: "Action",
       key: "action",
       render: (_: any, record: Club) => (
-        <Button type="link" onClick={() => handleEditClub(record.id)}>
-          Edit
-        </Button>
+
+        <EditOutlined
+          onClick={() => handleEditClub(record.id)}
+          style={{ color: 'black', cursor: 'pointer' }}
+        />
       ),
     },
   ];
@@ -154,11 +157,11 @@ const ClubComponent: React.FC = () => {
   return (
     <div>
       {/* Tabs at the top */}
-      <Tabs defaultActiveKey="activeClubs" onChange={handleTabChange}>
+      <Tabs className="custom-tabs" defaultActiveKey="activeUsers" onChange={handleTabChange}>
         <TabPane tab="Active Clubs" key="activeClubs">
           <Row justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
-              <Space>
+            <Space className="custom-search">
                 <Search
                   placeholder="Search by keyword"
                   onSearch={onSearch}
@@ -167,11 +170,11 @@ const ClubComponent: React.FC = () => {
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                 />
-                <Button onClick={handleReset}>Reset</Button>
+                <ReloadOutlined onClick={handleReset} style={{ fontSize: '24px', cursor: 'pointer' }} />
               </Space>
             </Col>
             <Col>
-              <Button type="primary" onClick={handleAddClub}>Add Club</Button>
+              <button className="custom-button" onClick={handleAddClub}>Add Club</button>
             </Col>
           </Row>
           <Table

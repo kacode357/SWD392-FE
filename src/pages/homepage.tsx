@@ -1,9 +1,21 @@
+import React from 'react';
+import Shirtnew from '../components/homepage/Shirtnew';
+import Shirtclub from '../components/homepage/Shirtclub';
+import Shirtseason from '../components/homepage/Shirtseason';
+import Shirtplayer from '../components/homepage/Shirtplayer';
 
-
-const homepage = () => {
+const HomePage: React.FC = () => {
   return (
-    <div>homepage</div>
-  )
-}
+    <div className='px-60'>
 
-export default homepage
+      <Shirtnew />
+
+      <Shirtclub />
+      <Shirtseason />
+      <Shirtplayer />
+
+    </div>
+  );
+};
+
+export default HomePage;

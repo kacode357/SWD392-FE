@@ -64,8 +64,7 @@ const Setting: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Settings</h2>
+    <div><p className="font-bold text-xl">Settings</p>
 
       {/* Center the avatar */}
       <Form form={form} layout="vertical" onFinish={handleUpdate}>
@@ -125,6 +124,7 @@ const Setting: React.FC = () => {
             htmlType="submit"
             loading={loading}
             disabled={imageUploading}
+            style={{ backgroundColor: 'black', color: 'white', borderColor: 'black' }}
           >
             Update
           </Button>

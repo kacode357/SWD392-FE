@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Select, DatePicker, Row, Col, notification } from 'antd'; 
+import { Form, Input, Select, DatePicker, Row, Col, notification, Button } from 'antd';
 import { createUserApi } from '../util/api';
 import FileUploader from '../util/FileUploader';
 
@@ -14,7 +14,7 @@ interface RegisterFormValues {
   gender: string;
   dob: any;
   address: string;
-  imgUrl?: string;  
+  imgUrl?: string;
 }
 
 interface RegisterFormProps {
@@ -23,9 +23,11 @@ interface RegisterFormProps {
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
   const [form] = Form.useForm();
-  const [imgUrl, setImgUrl] = useState<string>(''); 
+  const [imgUrl, setImgUrl] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false); // Thêm trạng thái loading
 
   const onFinish = async (values: RegisterFormValues) => {
+    setLoading(true); // Bật trạng thái loading khi bắt đầu gọi API
     const { email, password, name, phone_number, gender, dob, address } = values;
     try {
       const res = await createUserApi({
@@ -34,7 +36,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
         userName: name,
         phoneNumber: phone_number,
         gender,
-        dob: dob ? dob.toISOString() : '', 
+        dob: dob ? dob.toISOString() : '',
         address,
         imgUrl,
       });
@@ -47,19 +49,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
         onRegisterSuccess();
       }
     } catch (error) {
-
       notification.error({
         message: 'Error',
         description: 'User not created',
       });
-     
-     
+    } finally {
+      setLoading(false); // Tắt trạng thái loading sau khi API hoàn thành
     }
   };
 
   return (
-    <div className="form-container sign-up mt-5">
-      
+    <div className="form-container sign-up px-10">
       <Form
         form={form}
         name="register_form"
@@ -67,13 +67,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
         layout="vertical"
         initialValues={{ gender: 'male' }}
       >
-            <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">Sign Up</h1>
+        <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">Sign Up</h1>
 
         {/* Avatar Field (Centered) */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <Form.Item label="Profile Image" style={{ display: 'inline-block' }}>
             <FileUploader
-              onUploadSuccess={(url: string) => setImgUrl(url)} 
+              onUploadSuccess={(url: string) => setImgUrl(url)}
               defaultImage=""
             />
           </Form.Item>
@@ -192,12 +192,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess }) => {
               label="Address"
               rules={[{ required: true, message: 'Please input your address!' }]}
             >
-              <Input placeholder="Address"  />
+              <Input placeholder="Address" />
             </Form.Item>
           </Col>
         </Row>
 
-        <Button type="primary" htmlType="submit" block>
+        {/* Nút Sign Up */}
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loading} // Sử dụng trạng thái loading cho nút Sign Up
+          block
+        >
           Sign Up
         </Button>
       </Form>
